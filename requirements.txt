@@ -1,2 +1,3 @@
 tornado==3.2
 psutil==2.0.0
+PyRRD==0.1.0
