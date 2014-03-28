@@ -21,10 +21,10 @@ Installation
 - Install [nginx](http://nginx.org/en/)
 - Install nginx [non-buffered upload patch](http://tengine.taobao.org/document/http_core.html)
 - Install Python 2.7 
-- Install dependencies (just using `pip install -r requirements.txt`):
+- Install [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional RRA-stats and monitoring
+- Install required python packages (you can do this just using `pip install -r requirements.txt`):
     - [Tornado](https://github.com/facebook/tornado)
-	- [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional to use RRA-stats and monitoring
-	- [PyRRD](https://pypi.python.org/pypi/PyRRD) - optional to use RRA-stats and monitoring
+	- [PyRRD](https://pypi.python.org/pypi/PyRRD) - Python bindings for RRDTool
  	- Fix PyRRD [bug](#fix-pyrrd-bug)
 - Clone repository
 - Configure [server](#configure-server)
