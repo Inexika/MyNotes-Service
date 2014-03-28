@@ -20,11 +20,11 @@ Installation
 
 - Install [nginx](http://nginx.org/en/)
 - Install nginx [non-buffered upload patch](http://tengine.taobao.org/document/http_core.html)
-- Install Python 2.7, 
-- Install [Tornado](https://github.com/facebook/tornado)
-- Install dependencies:
-	- Install [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional to use RRA-stats and monitoring
-	- Install [PyRRD](https://pypi.python.org/pypi/PyRRD) - optional to use RRA-stats and monitoring
+- Install Python 2.7 
+- Install dependencies (just using `pip install -r requirements.txt`):
+    - [Tornado](https://github.com/facebook/tornado)
+	- [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional to use RRA-stats and monitoring
+	- [PyRRD](https://pypi.python.org/pypi/PyRRD) - optional to use RRA-stats and monitoring
  	- Fix PyRRD [bug](#fix-pyrrd-bug)
 - Clone repository
 - Configure [server](#configure-server)
@@ -36,7 +36,7 @@ Installation
 
 Glossary
 --------
-- `My Notes Desktop`
+- `My Notes Desktop` - Desktop application running on client computer with IBM Lotus Notes installed
 - `Mobile app` - Mobile app for iPhone or Android
 - `Service` - Cloud of several `servers`, Desktop is connected to the closest ones.
 - `Server` - Server where more than one `instances` are usually run
@@ -50,7 +50,7 @@ Configuration
 
 Below is a sample configuration:
  - `Nginx` as a reverse proxy server
- - The only server `your.domain.com` is in the cloud.
+ - The only server `mynotes.your_domain.com` is in the cloud.
  - There are 2 instances `8081`, `8082` are run by default.
  - `8081` is considered to a `master`
  - RRDTool-based `graphing` and `monitoring` is enabled
@@ -101,16 +101,16 @@ RRDTools settings. Defines parameters for Round-Robin-Archives to be created:
 Current `server` name, default `instances` and `Master`:
 
 	# current server name
-	server = 'your.domain.com'
+	server = 'mynotes.your_domain.com'
 	
 	# all your default cloud instances are listed here 
 	sites = [
-	('your.domain.com','8081'),
-	('your.domain.com','8082'),
+	('mynotes.your_domain.com','8081'),
+	('mynotes.your_domain.com','8082'),
 	]
 	
 	# master instance of your cloud
-	master = ('your.domain.com','8081')
+	master = ('mynotes.your_domain.com','8081')
 	
 Graphics and alert parameters. The section is used to config `monitor`:
 
@@ -123,10 +123,10 @@ Graphics and alert parameters. The section is used to config `monitor`:
 	alert_threshold = 0.3
 	alert_grace_period = 1800
 	alert_from = 'MyNotes cloud'
-	alert_sender = 'mynotes@your.domain.com'
-	alert_receivers = ['mynotes_admin@your.domain.com']
+	alert_sender = 'mynotes@your_domain.com'
+	alert_receivers = ['mynotes_admin@your_domain.com']
 	alert_log = 'log/monitor.sent'
-	alert_smtp = 'domino.inexika.com'
+	alert_smtp = 'mail.your_domain.com'
 
 ### Configure instances
 
@@ -155,7 +155,7 @@ In our case there are 2 files: `8081.conf`, `8082.conf` in the directory.
 	rrd_file = 'log/8081/stats.rrd'
 
 ### Configure nginx
-To comnfigure nginx site use `your.domain.com` file in `sites-available`. See example.
+To configure nginx site use `mynotes.your_domain.com` file in `sites-available`. See example.
 
 upstream config:
 
@@ -224,9 +224,9 @@ To run our instances listening particular ports:
 
 
 ###Start Monitor
-Recommended to configure periodical start `monitor` script.
-Every time `monitor` runs it update files contained graphics stats.
-It also checks whether overloading or down take place. Alert if needed.
+We recommend to configure periodical start `monitor` script.
+Every time `monitor` runs it updates files contained graphics stats.
+It also checks whether overloading or down take place, and sends email alert if needed.
 
 	python mn_monitor.py
 	
