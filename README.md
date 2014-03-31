@@ -1,17 +1,17 @@
 MyNotes-Service
 ===============
 
-*My Note Cloud Service* is a part of [My Notes](http://mynotesapp.com) solution to get your Notes applications on your mobile. 
-The service is intended to have My Notes Desktop and My Notes mobile app connected over the internet.
+*My Note Cloud Service* is a part of [My Notes](http://mynotesapp.com) solution to access your IBM Notes applications from your mobile. 
+The service is used by My Notes Desktop and My Notes mobile apps connected over the internet.
 
 Features
 --------
 
-- Cloud of servers  in different parts of the world. The closest server is chosen for connection to ensure maximum speed.
+- Cloud of servers in different parts of the world. The closest server is chosen for connection to ensure the maximum speed.
 - Ability to run more then one instance on each server
-- Non-blocking [Tornado](https://github.com/facebook/tornado) based HTTPServer listening particular port as instances
-- [Nginx](http://nginx.org/en/) as a front reverse proxy, round robin forwarding connect requests to instances
-- Silent switching between instances and servers 
+- Non-blocking [Tornado](https://github.com/facebook/tornado) based HTTP Server listening of particular port as instances
+- [Nginx](http://nginx.org/en/) as a front reverse proxy, round robin forwarding of connection requests to instances
+- Silent switching between instances and servers
 - Ability to run additional servers and instances on the fly
 - RRDTool-based graphing and monitoring (optional)
 
@@ -38,11 +38,11 @@ Glossary
 --------
 - `My Notes Desktop` - Desktop application running on client computer with IBM Lotus Notes installed
 - `Mobile app` - Mobile app for iPhone or Android
-- `Service` - Cloud of several `servers`, Desktop is connected to the closest ones.
-- `Server` - Server where more than one `instances` are usually run
-- `Instance` - Process on server, listening particular port
-- `Master Instance` - Special instance in the cloud, to controll CustomerID ranges distribution between other instances.
-- `Monitor` - Script running periodically to update graphics and alert instances beeing overloaded or down.
+- `Service` - Cloud of several `servers`, Desktop is connected to the closest one.
+- `Server` - Server where more than one `instance` usually running
+- `Instance` - Process on a server, listening to a particular port
+- `Master Instance` - Special instance in the cloud, to control distribution of CustomerID ranges between other instances.
+- `Monitor` - Script running periodically to update charts and alert about instances being overloaded or down.
 
 
 Configuration
@@ -51,13 +51,13 @@ Configuration
 Below is a sample configuration:
  - `Nginx` as a reverse proxy server
  - The only server `mynotes.your_domain.com` is in the cloud.
- - There are 2 instances `8081`, `8082` are run by default.
+ - There are 2 instances `8081`, `8082` running by default.
  - `8081` is considered to a `master`
  - RRDTool-based `graphing` and `monitoring` is enabled
     	
 ### Configure server
 
-Config file `mynotes.cfg` contains common parameters for all instrances of current server.
+Config file `mynotes.cfg` contains common parameters for all instances of current server.
 
 Timeouts and buffer-size for data transferring and logging settings:
 
@@ -112,7 +112,7 @@ Current `server` name, default `instances` and `Master`:
 	# master instance of your cloud
 	master = ('mynotes.your_domain.com','8081')
 	
-Graphics and alert parameters. The section is used to config `monitor`:
+Charts and alert parameters. The section is used to config `monitor`:
 
 	# --monitor settings
 	# path to graph images
@@ -216,19 +216,19 @@ locations to pass to particular instances:
 Start
 -----
 ###Start Instances
-Each of instances can be run independently on others.
-To run our instances listening particular ports:
+Each of the instances can be run independently from the others.
+To run instances and listen particular ports:
 
 	python mn_service.py --port=8081
 	python mn_service.py --port=8082
 
 
 ###Start Monitor
-We recommend to configure periodical start `monitor` script.
-Every time `monitor` runs it updates files contained graphics stats.
-It also checks whether overloading or down take place, and sends email alert if needed.
+We recommend to configure periodic start `monitor` script.
+Every time `monitor` runs it updates files with stats for charts.
+It also checks whether overloading or downtime is happening, and sends email alert if needed.
 
 	python mn_monitor.py
 	
-Graphics can be shown somewhere, e.g. special site or page may be configured.
+Charts can be shown somewhere, e.g. special site or page can be configured.
 See one of our server stats as [example](http://eu.mynotesapp.com/stats/)
