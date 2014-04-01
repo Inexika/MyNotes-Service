@@ -10,9 +10,12 @@ Features
 - Cloud of servers in different parts of the world. The closest server is chosen for connection to ensure the maximum speed.
 - Ability to run more then one instance on each server
 - Non-blocking [Tornado](https://github.com/facebook/tornado) based HTTP Server listening of particular port as instances
-- [Nginx](http://nginx.org/en/) as a front reverse proxy, round robin forwarding of connection requests to instances
 - Silent switching between instances and servers
 - Ability to run additional servers and instances on the fly
+
+Third party tools
+-----------------
+- [Nginx](http://nginx.org/en/) as a front reverse proxy, round robin forwarding of connection requests to instances
 - RRDTool-based graphing and monitoring (optional)
 
 Installation
