@@ -1,15 +1,18 @@
+""" Optional module. RRDTool-based graphing and monitoring """
 __author__ = 'morozov'
 
-from pyrrd.rrd import DataSource, RRA, RRD
-from pyrrd.graph import DEF, CDEF, VDEF, LINE, AREA, GPRINT, ColorAttributes, Graph
-from pyrrd.exceptions import ExternalCommandError
+try:
+    from pyrrd.rrd import DataSource, RRA, RRD
+    from pyrrd.graph import DEF, CDEF, VDEF, LINE, AREA, GPRINT, ColorAttributes, Graph
+    from pyrrd.exceptions import ExternalCommandError
+except ImportError:
+    RRD=None
 from tornado.options import options,define
 from operator import attrgetter,mul
 from itertools import imap,chain,ifilter
 from math import isnan
 from smtplib import SMTP, SMTPException
 from datetime import datetime, timedelta
-
 import os
 
 RRD_files={}
@@ -17,16 +20,15 @@ RRDs={}
 
 define('monitor_graph_path', default='./imgs')
 
-#MON_GRAPH_PATH = './../../imgs'
-
 MON_START_DAY = '1day'
 
-MON_GRAPH_CPU = 'cpu'
-MON_GRAPH_BYTES = 'bytes'
-MON_GRAPH_DESKTOP = 'agents_u'
-MON_GRAPH_TRANS = 't_completed'
-MON_GRAPH_TRANS_UNIQUE = 't_unique'
-MON_GRAPH_DURATION = 'duration'
+# chart names
+MON_GRAPH_CPU = 'cpu'                       # CPU loading
+MON_GRAPH_BYTES = 'bytes'                   # network
+MON_GRAPH_DESKTOP = 'agents_u'              # Unique CustomerID Desktop connections
+MON_GRAPH_TRANS = 't_completed'             # completed transactions (Mobile App -> Desktop -> Mobile App)
+MON_GRAPH_TRANS_UNIQUE = 't_unique'         # Unique CustomerID transactions per min
+MON_GRAPH_DURATION = 'duration'             # Average Duration of Transaction
 
 MON_GRAPH_CPU_MAX = 'cpu-max'
 MON_GRAPH_BYTES_MAX = 'bytes-max'
@@ -36,7 +38,7 @@ MON_GRAPH_TRANS_UNIQUE_MAX = 't_unique-max'
 MON_GRAPH_DURATION_MAX = 'duration-max'
 
 
-MON_SIZE= {'L':(897,370),'M':(547,268),'S':(307,150)}
+MON_SIZE= {'L':(897,370),'M':(547,268),'S':(307,150)}   # chart sizes (px)
 MON_DATA_STEP = 300
 
 COLOR_SET_1 = ['#d6dbe0','#c1c9dd','#a5afd6','#7f8cbf','#5960a8','#2d338e','#0c1975']#blue
@@ -55,7 +57,7 @@ define('alert_grace_period', default=1800)
 define('alert_from', default='MyNotes')
 define('alert_sender', default='mynotes@mynotesapp.com')
 define('alert_receivers', default=['morozov@inexika.com'])
-define('alert_log', default='monitor.log')
+define('alert_log', default='monitor.sent')
 define('alert_smtp', default='localhost')
 
 
@@ -75,6 +77,10 @@ def color_style():
     return ca
 
 def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
+
+    if RRD is None or not options.rrd_enabled:
+        return
+
     defs = []
     cdefs = []
     vdefs = []
@@ -466,24 +472,56 @@ class alerter():
                 pass
 
 
+def _verify_graph(graph):
+    graph_types_all = [MON_GRAPH_CPU,
+                       MON_GRAPH_BYTES,
+                       MON_GRAPH_DURATION,
+                       MON_GRAPH_DESKTOP,
+                       MON_GRAPH_TRANS,
+                       MON_GRAPH_TRANS_UNIQUE,
 
+                       MON_GRAPH_CPU_MAX,
+                       MON_GRAPH_BYTES_MAX,
+                       MON_GRAPH_DURATION_MAX,
+                       MON_GRAPH_DESKTOP_MAX,
+                       MON_GRAPH_TRANS_MAX,
+                       MON_GRAPH_TRANS_UNIQUE_MAX,
+                       ]
+    if type(graph)<>dict:
+        graph={}
 
+    for key, (period, gr_type) in graph.items():
+        if key not in ('S','M','L') or type(period)<>list or (type(gr_type)<>list and gr_type is not None):
+            del(graph[key])
+        if gr_type is None:
+            graph[key]=(period, graph_types_all)
 
 
 define('server')
 define('sites', default=[], type=list)
 define('rrd_file', default=None, callback=None)
+define('rrd_enabled', default=False, callback=None)
+define('graphics', default={'S':(['6h'],[MON_GRAPH_CPU_MAX,
+                                         MON_GRAPH_BYTES_MAX,
+                                         MON_GRAPH_DURATION_MAX,
+                                         MON_GRAPH_DESKTOP_MAX,
+                                         MON_GRAPH_TRANS_MAX,
+                                         MON_GRAPH_TRANS_UNIQUE_MAX,])}, callback=_verify_graph)
 
 options.parse_config_file("mynotes.conf", final=False)
 _server=options.server
 _known_instances = options.sites
 _instances = []
+
+
 if _known_instances and options.server:
     for (_server, _port) in _known_instances:
         if _server == options.server and _port not in _instances:
             _instances.append(_port)
 
 for _port in _instances:
+    if not (options.rrd_enabled and RRD):
+        break
     instance_conf = os.path.extsep.join(((os.path.join('instance', str(_port))),'conf'))
     if instance_conf and os.access(instance_conf, os.F_OK):
         options.rrd_file=None
@@ -491,35 +529,15 @@ for _port in _instances:
         if options.rrd_file and os.access(options.rrd_file, os.F_OK):
             RRD_files.update({_port:options.rrd_file})
 
-
 for (_inst,_file) in RRD_files.items():
     RRDs.update({_inst:RRD(_file)})
 
-graph_types = [MON_GRAPH_CPU,
-              MON_GRAPH_BYTES,
-              MON_GRAPH_DURATION,
-              MON_GRAPH_DESKTOP,
-              MON_GRAPH_TRANS,
-              MON_GRAPH_TRANS_UNIQUE,
-
-              MON_GRAPH_CPU_MAX,
-              MON_GRAPH_BYTES_MAX,
-              MON_GRAPH_DURATION_MAX,
-              MON_GRAPH_DESKTOP_MAX,
-              MON_GRAPH_TRANS_MAX,
-              MON_GRAPH_TRANS_UNIQUE_MAX,
-              ]
-graph_pars = [(['1h', '3h','6h','12h','1day','3day', '7day'],['M']),
-              (['6h'],['S']),
-              ]
+for _size, (_periods, _types)  in options.graphics.items():
+    for _p in _periods:
+        for _t in _types:
+            graph_data(_t, period=_p, size=_size)
 
 
-for _pp,_ss in graph_pars:
-    for _p in _pp:
-        for _s in _ss:
-            for t in graph_types:
-                graph_data(t, period=_p, size=_s)
-                #pass
 
 alerter(host = options.alert_smtp, server=options.server)()
 

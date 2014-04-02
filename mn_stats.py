@@ -1,3 +1,4 @@
+"""Optional module to collect stats, including RRD-data if it's enabled"""
 __author__ = 'morozov'
 from tornado.options import define, options
 from tornado.ioloop import IOLoop, PeriodicCallback

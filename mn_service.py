@@ -1,3 +1,6 @@
+"""
+Module contains RequestHandlers classes for Desktop / Mobile App interactions
+"""
 __author__ = 'morozov'
 from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler, HTTPError
@@ -13,6 +16,7 @@ import mn_instance as instance
 
 
 class MN_Handler(RequestHandler):
+    # Base class for Desktop/Mobile App handlers
     def __init__(self, application, request, **kwargs):
         RequestHandler.__init__(self, application, request, **kwargs)
         _headers = self.request.headers
@@ -161,21 +165,7 @@ class MN_Handler(RequestHandler):
         else:
             reason = 'No reply from agent'
         self.add_header(mn.MN_RECYCLED, mn.MN_NO_REPLY)
-        #self._on_error_close(504, exc_info = (HTTPError,HTTPError(504,reason)))
         self.send_error(504, exc_info = (HTTPError,HTTPError(504,reason)))
-
-    #def _on_error_close(self, status_code, **kwargs):
-    #    if not self.request.connection._request:
-    #        self.get_error_html(status_code, **kwargs)
-    #        self.on_finish()
-    #        self._log()
-    #    elif self._headers_written:
-    #        self.get_error_html(status_code, **kwargs)
-    #        self._log()
-    #        if not self._finished:
-    #            self.finish()
-    #    else:
-    #        self.send_error(status_code, **kwargs)
 
     def _clear_transaction(self):
         _interaction = mn.get_Interaction(self.RequestID)
@@ -205,6 +195,7 @@ class MN_Handler(RequestHandler):
 
 
 class Agent_ready(MN_Handler):
+    # Desktop is ready to listen Mobile App requests
     @tornado.web.asynchronous
     def post(self):
         self.process_agent()
@@ -216,12 +207,14 @@ class Agent_ready(MN_Handler):
 
 
 class Agent_reply(MN_Handler):
+    # Desktop reply to Mobile App request
     @tornado.web.asynchronous
     def post(self):
         self.process_reply()
 
 
 class Client(MN_Handler, instance.MN_Instance_Handler):
+    # Mobile App request
     def __init__(self, application, request, **kwargs):
         MN_Handler.__init__(self, application, request, **kwargs)
         self.mn_server = ''
@@ -255,6 +248,7 @@ class Client(MN_Handler, instance.MN_Instance_Handler):
 
 
 class Agent_ping (MN_Handler):
+    # Desktop 'ping' to find the closest server
     @tornado.web.asynchronous
     def post(self):
         self.finish()

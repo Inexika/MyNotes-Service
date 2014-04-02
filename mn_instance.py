@@ -1,12 +1,8 @@
-"""Cloud service consists of instances, run on the servers.
-Servers' names like eu.mynotesapp.com, us.mynotesapp.com are hardcoded.
-More than one instances can be run on each server.
-One of instance is Master one. It controls CustomerID ranges.
-Instances are able to:
+""" Module contains instance-related handlers to interact with each other:
 notify each other about their appearance,
 ask additional CustomerID range (if needed),
 inform when CustomerID desktop is connected to them,
-...
+etc...
 """
 __author__ = 'morozov'
 
@@ -326,8 +322,7 @@ class mn_instance():
 
 
 class MN_Instance_Handler(RequestHandler):
-    """BaseClass for Instance RequestHandlers
-    """
+    # BaseClass for Instance-related RequestHandlers
     def __init__(self, application, request, **kwargs):
         RequestHandler.__init__(self, application, request, **kwargs)
         _headers = self.request.headers

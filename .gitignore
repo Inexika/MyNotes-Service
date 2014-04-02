@@ -37,3 +37,6 @@ nosetests.xml
 .idea
 .svn
 env
+*.pyc
+# log/8880/*.log
+# log/8880/*.rrd
