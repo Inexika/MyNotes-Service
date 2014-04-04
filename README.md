@@ -60,7 +60,7 @@ Below is a sample configuration:
     	
 ### Configure server
 
-Config file `mynotes.cfg` contains common parameters for all instances of current server.
+Config file `mynotes.conf` contains common parameters for all instances of current server.
 
 Timeouts and buffer-size for data transferring and logging settings:
 
@@ -120,7 +120,20 @@ Charts and alert parameters. The section is used to config `monitor`:
 	# --monitor settings
 	# path to graph images
 	monitor_graph_path = '../imgs'
-	
+
+	# --chart settings - graphical representations to be created
+    # graphics = {size: ([graph_periods], [graph_types])}
+    # size: 'S','M','L' are acceptable values
+    # graph_periods: RRDTool time offset specifications: '1h', '1day', '1m', etc.
+    # graph_types: hardcoded internal graph names. None means all of existing types.
+    graphics = {
+    'S': [ (['6h'], ['cpu-max', 'bytes-max', 'agents_u-max', 't_completed-max', 't_unique-max', 'duration-max']),],
+    'M': [
+    (['1h','3h','6h','12h','1day','3day','7day','1m'],['cpu','bytes','agents_u','t_completed','t_unique','duration']),
+    (['6h'], ['cpu-max', 'bytes-max', 'agents_u-max', 't_completed-max', 't_unique-max', 'duration-max']),
+    ]
+    }
+
 	# --alert settings
 	alert_over = 900000     #900000 mcs/sec = 90%
 	alert_threshold = 0.3
