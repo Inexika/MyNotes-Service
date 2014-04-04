@@ -212,7 +212,7 @@ class mn_instance():
     def _response_hello(self, response):
         self._hello_awaiting -=1
         if response.error:
-            self._rem_instance(response.request)
+            self._rem_instance(response.request, response.error)
         else:
             _headers = response.headers
             if MN_KNOWN_SERVERS in _headers:
@@ -231,7 +231,7 @@ class mn_instance():
 
     def _response_connected(self, response):
         if response.error:
-            self._rem_instance(response.request)
+            self._rem_instance(response.request, response.error)
 
     def _response_got_range(self, response):
         if MN_INSTANCE_RANGE_FROM in response.headers and MN_INSTANCE_RANGE_TO in response.headers:
@@ -251,7 +251,7 @@ class mn_instance():
 
     def _add_instance(self, server, port):
         _added=False
-        if port and port not in self._instances and server==self.server and port!=self.port:
+        if server==self.server and port and port not in self._instances and port!=self.port:
             self._instances.append(port)
             _added=True
         if server and server!=self.server and server not in self._servers:
@@ -261,11 +261,11 @@ class mn_instance():
             access_log.debug('add instance: server=%s, port=%s' % (server,port))
 
 
-    def _rem_instance(self, request):
+    def _rem_instance(self, request, error=None):
         headers=request.headers
         _server=headers.get(MN_TARGET_SERVER,'')
         _port=headers.get(MN_TARGET_PORT,'')
-        access_log.debug('remove instance: server=%s, port=%s' % (_server,_port))
+        access_log.debug('remove instance: server=%s, port=%s: (%s)' % (_server,_port,str(error)))
         if _server and _port:
             return
         elif _server:
@@ -450,7 +450,7 @@ class inst_Connected(MN_Instance_Handler):
     def post (self):
         _inst = self._instance
         _inst._updateLocation(self.ProductID, (self.mn_server,  self.mn_port))
-        #_inst._add_instance(self.mn_server,  self.mn_port)
+        _inst._add_instance(self.mn_server,  self.mn_port)
         _headers = {MN_INSTANCE_SERVER:self.mn_server,MN_INSTANCE_PORT:self.mn_port}
         for _port in _inst._instances:
             _inst.connected(self.ProductID, port = _port, instance_headers = _headers)
@@ -464,7 +464,7 @@ class inst_Connected_port(MN_Instance_Handler):
     def post (self):
         _inst = self._instance
         _inst._updateLocation(self.ProductID, (self.mn_server,  self.mn_port))
-        #_inst._add_instance(self.mn_server,  self.mn_port)
+        _inst._add_instance(self.mn_server,  self.mn_port)
         self.finish()
 
 
