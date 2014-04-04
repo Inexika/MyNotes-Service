@@ -490,11 +490,20 @@ def _verify_graph(graph):
     if type(graph)<>dict:
         graph={}
 
-    for key, (period, gr_type) in graph.items():
-        if key not in ('S','M','L') or type(period)<>list or (type(gr_type)<>list and gr_type is not None):
+    for key, pairs in graph.items():
+        if key not in ('S','M','L') or type(pairs)<>list:
             del(graph[key])
-        if gr_type is None:
-            graph[key]=(period, graph_types_all)
+        else:
+            for _pair in pairs[:]:
+                if type(_pair)<>tuple or (type(_pair)==tuple and len(_pair)<>2):
+                    pairs.remove(_pair)
+                else:
+                    (period, gr_type)=_pair
+                    if type(period)<>list or (type(gr_type)<>list and gr_type is not None):
+                        pairs.remove(_pair)
+                    elif gr_type is None:
+                        pairs.insert(pairs.index(_pair), (period, graph_types_all))
+                        pairs.remove(_pair)
 
 
 define('server')
@@ -532,12 +541,11 @@ for _port in _instances:
 for (_inst,_file) in RRD_files.items():
     RRDs.update({_inst:RRD(_file)})
 
-for _size, (_periods, _types)  in options.graphics.items():
-    for _p in _periods:
-        for _t in _types:
-            graph_data(_t, period=_p, size=_size)
-
-
+for _size, pairs  in options.graphics.items():
+    for (_periods, _types) in pairs:
+        for _p in _periods:
+            for _t in _types:
+                graph_data(_t, period=_p, size=_size)
 
 alerter(host = options.alert_smtp, server=options.server)()
 
