@@ -353,8 +353,8 @@ class MN_Instance_Handler(RequestHandler):
         res = "%s %s [%s:%s (%s)] (%s)" % \
               (self.request.method,
               self.request.uri,
-              getattr(self,'mn_server','--') or '--',
-              getattr(self,'mn_port','--') or '--',
+              getattr(self,'mn_server', '') or self._headers.get(MN_INSTANCE_SERVER,'') or '--',
+              getattr(self,'mn_port', '') or self._headers.get(MN_INSTANCE_PORT,'') or '--',
               getattr(self,'ProductID','--') or '--',
               _h.get('X-Real-IP', _h.get('X-Forwarded-For', self.request.remote_ip)))
         return res
