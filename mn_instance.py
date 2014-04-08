@@ -10,6 +10,7 @@ import tornado.httpclient
 import os
 from tornado.web import RequestHandler
 from tornado.log import access_log, app_log, gen_log
+from tornado.options import define, options
 from mynotes import MN_PRODUCT_ID, MN_RESPONSE_TYPE, MN_NO_AGENT
 
 MN_INSTANCE_SERVER = "X-IWP-Host"
@@ -22,6 +23,7 @@ MN_INSTANCE_RANGE_SIZE = "X-IWP-Range-Size"
 MN_TARGET_SERVER = "X-IWP-Target-Host"
 MN_TARGET_PORT = "X-IWP-Target-Port"
 
+define('max_instance_failed', default=5, type=int)
 
 class mn_instance():
     """Cloud service instance:
@@ -53,6 +55,7 @@ class mn_instance():
         self._servers = []
         self._instances = []
         self._IDs = {}
+        self._failed = {}
         self._initialized = False
         self._hello_headers = {MN_INSTANCE_SERVER:self.server, MN_INSTANCE_PORT:self.port}
         self._hello_awaiting =0
@@ -232,6 +235,8 @@ class mn_instance():
     def _response_connected(self, response):
         if response.error:
             self._rem_instance(response.request, response.error)
+        else:
+            self._clear_failed(response.request)
 
     def _response_got_range(self, response):
         if MN_INSTANCE_RANGE_FROM in response.headers and MN_INSTANCE_RANGE_TO in response.headers:
@@ -260,19 +265,29 @@ class mn_instance():
         if _added:
             access_log.debug('add instance: server=%s, port=%s' % (server,port))
 
-
     def _rem_instance(self, request, error=None):
         headers=request.headers
         _server=headers.get(MN_TARGET_SERVER,'')
         _port=headers.get(MN_TARGET_PORT,'')
-        access_log.debug('remove instance: server=%s, port=%s: (%s)' % (_server,_port,str(error)))
-        if _server and _port:
-            return
-        elif _server:
-            self._servers.remove(_server)
-        elif _port:
-            self._instances.remove(_port)
+        assert (_server or _port) and not (_server and _port), \
+        'Either server("%s") or port("%s") should be specified' % (_server,_port)
+        _key = _server or _port
+        if _key not in self._failed:
+            self._failed[_key] = 1
+        else:
+            self._failed[_key] += 1
+        access_log.debug('failed connect to instance "%s": %i (%s)' % (_key, self._failed[_key], str(error)))
 
+        if self._failed[_key] > options.max_instance_failed:
+            access_log.debug('remove instance "%s"' % _key)
+            self._servers.remove(_server) if _server else self._instances.remove(_port)
+            del self._failed[_key]
+
+    def _clear_failed(self, request):
+        headers=request.headers
+        _server=headers.get(MN_TARGET_SERVER,'')
+        _port=headers.get(MN_TARGET_PORT,'')
+        self._failed[_server or _port] = 0
 
     def _url(self, path, server = None, port = None):
         headers={}
