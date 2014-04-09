@@ -20,8 +20,8 @@ Third party tools
 
 Installation
 ------------
-- Install [nginx](http://nginx.org/en/).
-- Nginx itself doesn't support `Non-buffered upload`. You can either install [Tengine](http://tengine.taobao.org/) - web server based on the `Nginx` originated by [Taobao](http://en.wikipedia.org/wiki/Taobao) which [does](http://tengine.taobao.org/document/http_core.html) or just apply [patch](http://yaoweibin.cn/patches/) to your `Nginx`. That's the way we followed because `proxy_request_buffering` was the only option we needed in addition. 
+- Install [nginx](http://nginx.org/en/)
+- Standard `Nginx` doesn't support `Non-buffered upload`. You can either install [Tengine](http://tengine.taobao.org/) - web server based on the `Nginx` originated by [Taobao](http://en.wikipedia.org/wiki/Taobao) which [does](http://tengine.taobao.org/document/http_core.html) instead or just apply [patch](http://yaoweibin.cn/patches/) to your `Nginx`. That's the way we followed because `proxy_request_buffering` was the only option we needed in addition. 
 Use commands like below to apply the patch.
 
 		patch -p 1 -i nginx-1.4.2-no_buffer-v8.patch
@@ -189,7 +189,7 @@ upstream config:
     	server 127.0.0.1:8081 weight=1;
     	server 127.0.0.1:8082 weight=1;
     }
-sercever context:
+server context:
 
 	server {
 	    server_name mynotes.your_domain.com;
