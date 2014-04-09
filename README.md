@@ -15,14 +15,20 @@ Features
 
 Third party tools
 -----------------
-- [Nginx](http://nginx.org/en/) as a front reverse proxy, round robin forwarding of connection requests to instances
+- [Nginx](http://nginx.org/en/) as a front reverse proxy with `Non-buffered upload`, round robin forwarding of connection requests to instances
 - RRDTool-based graphing and monitoring (optional)
 
 Installation
 ------------
+- Install [nginx](http://nginx.org/en/).
+- Nginx itself doesn't support `Non-buffered upload`. You can either install [Tengine](http://tengine.taobao.org/) - web server based on the `Nginx` originated by [Taobao](http://en.wikipedia.org/wiki/Taobao) which [does](http://tengine.taobao.org/document/http_core.html) or just apply [patch](http://yaoweibin.cn/patches/) to your `Nginx`. That's the way we followed because `proxy_request_buffering` was the only option we needed in addition. 
+Use commands like below to apply the patch.
 
-- Install [nginx](http://nginx.org/en/)
-- Install nginx [non-buffered upload patch](http://tengine.taobao.org/document/http_core.html)
+		patch -p 1 -i nginx-1.4.2-no_buffer-v8.patch
+		./configure --with-http_ssl_module --with-zlib=/install/zlib-1.2.8 --with-http_gzip_static_module
+		make
+		make install
+
 - Install Python 2.7 
 - Install [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional RRA-stats and monitoring
 - Install required python packages (you can do this just using `pip install -r requirements.txt`):
@@ -54,8 +60,8 @@ Configuration
 Below is a sample configuration:
  - `Nginx` as a reverse proxy server
  - The only server `mynotes.your_domain.com` is in the cloud.
- - There are 2 instances `8081`, `8082` running by default.
- - `8081` is considered to a `master`
+ - There are 2 instances `8081`, `8082` running by default
+ - `8081` is considered to be a `master`
  - RRDTool-based `graphing` and `monitoring` is enabled
     	
 ### Configure server
@@ -75,6 +81,9 @@ Timeouts and buffer-size for data transferring and logging settings:
 	
 	# --max clients option for AsyncHTTPClient
 	http_max_clients = 60
+	
+	# failed connections before removing instance/server
+	max_instance_failed = 5
 	
 	# --logging settings
 	logging= 'INFO'
@@ -183,13 +192,15 @@ upstream config:
 sercever context:
 
 	server {
-	    server_name yourdomain;
+	    server_name mynotes.your_domain.com;
 	    listen 80;
-	....
+		....
 	    client_max_body_size 32m;
+	    proxy_buffering off;
+    	proxy_read_timeout 300s;
 	
 	    # Tengine feature - http://tengine.taobao.org/document/http_core.html
-	    proxy_buffering off;	
+	    proxy_request_buffering off;	
 location to pass to upstream:
 
     # All other requests except those:
