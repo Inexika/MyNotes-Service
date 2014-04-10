@@ -38,5 +38,7 @@ nosetests.xml
 .svn
 env
 *.pyc
-# log/8880/*.log
-# log/8880/*.rrd
+log/
+range/
+instance/
+mynotes.conf

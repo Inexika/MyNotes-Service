@@ -66,7 +66,8 @@ Below is a sample configuration:
     	
 ### Configure server
 
-Config file `mynotes.conf` contains common parameters for all instances of current server.
+Rename file `mynotes.sample.conf` to `mynotes.conf`.
+The file contains common parameters for all instances of current server, specify necessary options.
 
 Timeouts and buffer-size for data transferring and logging settings:
 
@@ -153,31 +154,51 @@ Charts and alert parameters. The section is used to config `monitor`:
 	alert_log = 'log/monitor.sent'
 	alert_smtp = 'mail.your_domain.com'
 
-### Configure instances
+### Configure server instances
 
-Config files for all instances are located in `./instance` directory.
+Sample config files for all instances are located in `./instance.sample` directory.
+Rename `instance.sample` to `instance`.
+
 Listened port is used as a file name.
 Instance config file contains parameters, related  to particular instance. 
 Such as log file, stats file, etc.
 
-In our case there are 2 files: `8081.conf`, `8082.conf` in the directory.
+There are 2 sample files: `8081.conf`, `8082.conf` in the directory.
+Rename them according to your ports if needed.
+Create another files for all of your instances or remove extra ones if needed.
+
+### Configure `range` and `log` options for each instance
+
+- `range_file`, `master_range`:
+The first file contains instance CustomerID range for registration . No need to create it manually.
+The second one is for `master-instance` only. It contains cloud CustomerID, which is distributed between instances.
+
+`./range.sample` contains directories for instance range and `master.ini` file template.
+You can either rename it to `range` or locate range files where you wish.
+
+- `log_file_prefix`, `stats_file_prefix`, `rrd_file`:
+`./log.sample` contains directories. You can either rename it to `log` or locate the files where you wish.
+
+- Specify correct location in instances' config files.
+
 
 `8081.conf`
 	
-	# log file name
-	log_file_prefix = 'log/8081/mynotes.log'
+	    # log file name
+	    log_file_prefix = 'log/8081/mynotes.log'
 
-	# stats file name
-	stats_file_prefix = 'log/8081/mn_stats.log'
+	    # stats file name
+	    stats_file_prefix = 'log/8081/mn_stats.log'
 
-	# range ID file
-	range_file = 'range/8081/range.ini'
+	    # range ID file
+	    range_file = 'range/8081/range.ini'
 
-	#master range ID (for master instance only!!)
-	master_range = 'range/8081/master.ini'
+	    #master range ID (for master instance only!!)
+	    master_range = 'range/8081/master.ini'
 
-	#optional: if Round-Robin-Achive is used for stats and monitoring
-	rrd_file = 'log/8081/stats.rrd'
+	    #optional: if Round-Robin-Achive is used for stats and monitoring
+	    rrd_file = 'log/8081/stats.rrd'
+
 
 ### Configure nginx
 To configure nginx site use `mynotes.your_domain.com` file in `sites-available`. See example.
