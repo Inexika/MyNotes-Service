@@ -21,7 +21,7 @@ Third party tools
 Installation
 ------------
 - Install [nginx](http://nginx.org/en/)
-- Standard `Nginx` doesn't support `Non-buffered upload`. You can either install [Tengine](http://tengine.taobao.org/) - web server based on the `Nginx` originated by [Taobao](http://en.wikipedia.org/wiki/Taobao) which [does](http://tengine.taobao.org/document/http_core.html) instead or just apply [patch](http://yaoweibin.cn/patches/) to your `Nginx`. That's the way we followed because `proxy_request_buffering` was the only option we needed in addition. 
+- Standard `Nginx` doesn't support `Non-buffered upload`. You can either install [Tengine](http://tengine.taobao.org/) instead (web server based on the `Nginx` originated by [Taobao](http://en.wikipedia.org/wiki/Taobao) which [does](http://tengine.taobao.org/document/http_core.html)) or just apply [patch](http://yaoweibin.cn/patches/) to your `Nginx` version. That's the way we followed because `proxy_request_buffering` was the only option we needed in addition. 
 Use commands like below to apply the patch.
 
 		patch -p 1 -i nginx-1.4.2-no_buffer-v8.patch
@@ -159,7 +159,7 @@ Charts and alert parameters. The section is used to config `monitor`:
 Sample config files for all instances are located in `./instance.sample` directory.
 Rename `instance.sample` to `instance`.
 
-Listened port is used as a file name.
+Use listened port as a file name.
 Instance config file contains parameters, related  to particular instance. 
 Such as log file, stats file, etc.
 
@@ -172,32 +172,33 @@ Create another files for all of your instances or remove extra ones if needed.
 - `range_file`, `master_range`:
 
 	The first file contains instance CustomerID range for registration . No need to create it manually.
-	The second one is for `master-instance` only. It contains cloud CustomerID, which is distributed between instances.
+	The second one is for `master-instance` only. It contains cloud CustomerID range distributed among instances.
 
-	`./range.sample` contains directories for instance range and `master.ini` file template.
-	You can either rename it to `range` or locate range files where you wish.
+	`./range.sample` contains `8081/master.ini` file as a template empty directory `8082`.
+	You can either rename it to `range` use that structure or relocate range files where you wish.
 
 - `log_file_prefix`, `stats_file_prefix`, `rrd_file`:
 
 	`./log.sample` contains directories. You can either rename it to `log` or locate the files where you wish.
 
-- Specify correct location in instances' config files.
+- Check the correct locations are specified in the instances' config files .
 
 
 `8081.conf`
 	
     # log file name
     log_file_prefix = 'log/8081/mynotes.log'
+    
     # stats file name
     stats_file_prefix = 'log/8081/mn_stats.log'
 
     # range ID file
     range_file = 'range/8081/range.ini'
 
-    #master range ID (for master instance only!!)
+    # master range ID (for master instance only!!)
     master_range = 'range/8081/master.ini'
 
-    #optional: if Round-Robin-Achive is used for stats and monitoring
+    # optional: if Round-Robin-Achive is used for stats and monitoring
     rrd_file = 'log/8081/stats.rrd'
 
 
