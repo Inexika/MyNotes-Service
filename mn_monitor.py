@@ -22,7 +22,7 @@ define('monitor_graph_path', default='./imgs')
 
 MON_START_DAY = '1day'
 
-# chart names
+# chart templates
 MON_GRAPH_CPU = 'cpu'                       # CPU loading
 MON_GRAPH_BYTES = 'bytes'                   # network
 MON_GRAPH_DESKTOP = 'agents_u'              # Unique CustomerID Desktop connections
@@ -77,7 +77,8 @@ def color_style():
     return ca
 
 def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
-
+    #   Makes chart one of hardcoded templates (rrdgraph)
+    #   Period and size are specified as well
     if RRD is None or not options.rrd_enabled:
         return
 
@@ -91,10 +92,8 @@ def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
     else:
         _sizef = '-' + size.lower()
 
-
     _start = '-%s' % period
     _graph_file = '%s%s.%s.png' % (os.path.join(options.monitor_graph_path, gtype),_sizef,period)
-    #_graph_file = '%s/%s.%s.png' % (MON_GRAPH_PATH, gtype, period)
     _label=''
     _title=''
     _step = None
@@ -109,7 +108,6 @@ def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
 
     _sorted = RRDs.keys()
     _sorted.sort()
-
 
     if gtype == MON_GRAPH_CPU:
         _colors = COLOR_SET_3[:]
@@ -304,6 +302,7 @@ def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
         pass
 
 class alerter():
+    #   Alerts if something goes wrong
     def __init__(self, RRDs=RRDs, host='localhost', server=None, last_alerts=None,):
         self.RRDs=RRDs
         self.host = host
@@ -330,6 +329,7 @@ class alerter():
             self.get_lastalerts()
 
     def sendmail(self):
+        # Sends email alerts
         if self.subj and self.msgs:
             if not self.smtp:
                 try:
@@ -350,6 +350,8 @@ class alerter():
                         pass
 
     def __call__(self, *args, **kwargs):
+        #   Checks CPU loading and being down
+        #   Prepares alert data if any
         for (_inst,_rrd) in self.RRDs.items():
             try:
                 data = _rrd.fetch(cf='MAX',start=ALERT_PERIOD)[MON_GRAPH_CPU][:-1]
@@ -473,6 +475,8 @@ class alerter():
 
 
 def _verify_graph(graph):
+    #   Verifies whether graphics option values are correct
+    #   Ignores incorrect parts
     graph_types_all = [MON_GRAPH_CPU,
                        MON_GRAPH_BYTES,
                        MON_GRAPH_DURATION,

@@ -1,8 +1,8 @@
-""" Module contains instance-related handlers to interact with each other:
-notify each other about their appearance,
-ask additional CustomerID range (if needed),
-inform when CustomerID desktop is connected to them,
-etc...
+""" Contains instance-related handlers to interact instances with each other:
+- self-appearance notification
+- CustomerID range requests,
+- desktop-connected notification,
+- desktop finding, etc...
 """
 __author__ = 'morozov'
 
@@ -26,15 +26,14 @@ MN_TARGET_PORT = "X-IWP-Target-Port"
 define('max_instance_failed', default=5, type=int)
 
 class mn_instance():
-    """Cloud service instance:
-    server          - DNS-name server where instance runs
-    port            - listening port
-    master_instance - master instance (server,port)
-    range_file      - file contained CustomerID range instance bounds
-    range_size      - range size requested
-    master_range    - file contained CustomerID master range to be distributed among others instances
-    known_instances - [(server,port),...] default instances list
-    """
+    #   Cloud service instance:
+    #   server          - DNS-name server where instance runs
+    #   port            - listening port
+    #   master_instance - master instance (server,port)
+    #   range_file      - file contained CustomerID range instance bounds
+    #   range_size      - range size requested
+    #   master_range    - file contained CustomerID master range to be distributed among others instances
+    #   known_instances - [(server,port),...] default instances list
     def __init__(self, server, port, master_instance, range_file, range_size, master_range=None,
                  known_instances=None):
         self.server = server
@@ -82,8 +81,7 @@ class mn_instance():
             self._get_range(self.master_server, self.master_port, self._response_got_range, self.range_size)
 
     def hello(self, server = None, port = None, instance_headers = None):
-        """Handshake requests to neighbor instances and servers of others
-        """
+        #   Says 'hello' to other instances/servers
         url, _headers = self._url('hello', server, port)
         access_log.debug("hello: %s" % url)
         if instance_headers is None:
@@ -96,8 +94,7 @@ class mn_instance():
         http_client.fetch(request, self._response_hello)
 
     def connected(self, CustomerID, server=None, port=None, instance_headers = None):
-        """Informs others CustomerID Desktop is connected to the instance
-        """
+        #   Notifies others Desktop is connected
         url, _headers = self._url('connected',server, port)
         _headers.update({MN_PRODUCT_ID: CustomerID})
         if instance_headers is None:
@@ -308,18 +305,18 @@ class mn_instance():
         return url, headers
 
     def _url_localhost(self, path, server = None, port = None):
-        """_url() not-tested-yet version
-        refer to instances through the localhost instead their DNS names"""
+        #   _url() not-tested-yet version
+        #   refers to instances through the localhost instead their DNS names
         headers={}
         if port and (not server or server==self.server):
-            #via localhost if refers to 'its' instance
+            # via localhost if refers to 'its' instance
             url = 'http://localhost:%s/%s' % (str(port),path)
             headers[MN_TARGET_PORT] = port
             return url, headers
 
         elif not server:
-            #refers to the own server w/o port specified
-            #not sure if effective, just in case...
+            # refers to the own server w/o port specified
+            # not sure if effective, just in case...
             _server = self.server
         else:
             _server = server
@@ -337,7 +334,7 @@ class mn_instance():
 
 
 class MN_Instance_Handler(RequestHandler):
-    # BaseClass for Instance-related RequestHandlers
+    #   BaseClass for Instance-related RequestHandlers
     def __init__(self, application, request, **kwargs):
         RequestHandler.__init__(self, application, request, **kwargs)
         _headers = self.request.headers
@@ -349,6 +346,7 @@ class MN_Instance_Handler(RequestHandler):
         self._not_found_callback = self._response_no_agent
 
     def _request_summary(self):
+        #   class specific summary
         _h = self.request.headers
         res = "%s %s [%s:%s (%s)] (%s)" % \
               (self.request.method,
@@ -421,7 +419,8 @@ class MN_Instance_Handler(RequestHandler):
 
 
 class inst_Hello (MN_Instance_Handler):
-    """Hello handler to the whole server: processed by round-robin instance"""
+    #   'Hello' handler addressed to the server:
+    #   port not specified, passed to round-robin instance
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -434,7 +433,8 @@ class inst_Hello (MN_Instance_Handler):
 
 
 class inst_Hello_port (MN_Instance_Handler):
-    """Hello handler to the instance: port is specified"""
+    #   'Hello' handler addressed to the instance:
+    #   port is specified, passed to the specified instance exactly
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -444,7 +444,8 @@ class inst_Hello_port (MN_Instance_Handler):
 
 
 class agent_Connect (MN_Instance_Handler):
-    """Desktop: connect to the chosen server: processed by round-robin instance"""
+    #   Desktop tries to connect to the chosen server:
+    #   passed to round-robin instance
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -459,8 +460,8 @@ class agent_Connect (MN_Instance_Handler):
 
 
 class inst_Connected(MN_Instance_Handler):
-    """Handler to inform the whole server CustomerID Desktop is connected to the specified instance:
-    processed by round-robin server's instance"""
+    #   Notifies another server Desktop is connected to the instance:
+    #   passed to round-robin instance
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -473,8 +474,8 @@ class inst_Connected(MN_Instance_Handler):
 
 
 class inst_Connected_port(MN_Instance_Handler):
-    """Handler to inform other instances CustomerID Desktop is connected to the specified one:
-    instance port is specified"""
+    #   Notifies others Desktop is connected to the instance:
+    #   port is specified, passed to specified instance exactly
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -484,7 +485,7 @@ class inst_Connected_port(MN_Instance_Handler):
 
 
 class inst_Find(MN_Instance_Handler):
-    """Handler to find where the Desktop is"""
+    #   Makes a search where the Desktop is
     @tornado.web.asynchronous
     def post (self):
         _desktop = self._instance._getLocation(self.ProductID)
@@ -495,12 +496,16 @@ class inst_Find(MN_Instance_Handler):
 
 
 class app_Client(MN_Instance_Handler):
+    #   Mobile app tries to find its Desktop
+    #   port is not specified, passed to round robin instance
     @tornado.web.asynchronous
     def post (self):
         self._find_desktop()
 
 
 class inst_Range(MN_Instance_Handler):
+    #   Requests ID range from server
+    #   port is not specified, passed to round robin instance
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance
@@ -516,12 +521,16 @@ class inst_Range(MN_Instance_Handler):
 
 
 class inst_Range_port(MN_Instance_Handler):
+    #   Requests ID range from instance
+    #   port is specified, passed to specified instance exactly
     @tornado.web.asynchronous
     def post (self):
         self._range_response()
 
 
 class agent_getID(MN_Instance_Handler):
+    #   Thirst-time registration on service, getting Customer ID
+    #   port is not specified, passed to round robin instance
     @tornado.web.asynchronous
     def post (self):
         _inst = self._instance

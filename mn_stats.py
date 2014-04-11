@@ -35,7 +35,7 @@ stats={}
 
 class PeriodicCallback_start(PeriodicCallback):
     def start(self, start_timeout=0):
-        """Starts the timer on start_timeout: number_of_secs after new minute starts"""
+        #   Starts the timer on start_timeout: number_of_secs after new minute starts
         self._running = True
         if start_timeout == None:
             self._next_timeout = self.io_loop.time()
@@ -48,6 +48,8 @@ class PeriodicCallback_start(PeriodicCallback):
 
 
 class stats_monitor:
+    #   Collects stats,
+    #   periodically writes it to stats file and RRD-archive (if enabled)
     def __init__(self, period = 0, enabled = False):
         self.period = period
         self.enabled = enabled
@@ -89,13 +91,14 @@ class stats_monitor:
 
         stats ['CPU_percent']=0
         stats ['CPU_time']=0
-        #stats ['CPU_delta']=0
 
         stats ['Bytes_Total'] = 0
         stats ['Bytes_Period'] = 0
 
 
     def init_rdd(self):
+        #   Initiates RRD-archive
+        #   Creates the new one if absent or need to reset
         filename = options.rrd_file
         if not options.rrd_reset and access(filename, F_OK):
             myRRD = RRD(filename)
@@ -149,6 +152,7 @@ class stats_monitor:
             self.callback.stop()
 
     def _stats_on(self, key, ID):
+        #   Called on Interaction / Desktop agent start
         if not self.enabled or not key in ['Interact','Agent']:
             return
         stats [key+'_On']+=1
@@ -163,6 +167,7 @@ class stats_monitor:
                 stats[key+'_Min'] = stats[key+'_Current']
 
     def _stats_off(self, key, completed=True, resp_time=None):
+        #   Called on Interaction / Desktop agent finish
         if not self.enabled or not key in ['Interact','Agent']:
             return
         stats [key+'_Off']+=1
@@ -183,6 +188,7 @@ class stats_monitor:
         stats ['Bytes_Period']+=num
 
     def _run(self):
+        # Puts stats data to file / RRD-archive
         for key in ['Agent','Interact']:
             stats [key+'_Period'] = stats [key+'_Start'] + stats [key+'_On']
         if resource:
@@ -217,7 +223,6 @@ class stats_monitor:
             )
         )
 
-        #todo: run_rrd
         self._run_rrd()
 
         stats['Bytes_Period']=0
@@ -230,6 +235,7 @@ class stats_monitor:
                 stats[key+'_AvgTime']=[0.0,0]
 
     def _run_rrd(self):
+        # Puts data to RRD-archive
         if self.rrd:
             _time = int(time())
             _data = [stats['Agent_Unique'],

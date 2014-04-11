@@ -1,5 +1,5 @@
 """
-Module contains RequestHandlers classes for Desktop / Mobile App interactions
+Module contains RequestHandler classes for Desktop / Mobile App interactions
 """
 __author__ = 'morozov'
 from tornado.ioloop import IOLoop
@@ -16,7 +16,7 @@ import mn_instance as instance
 
 
 class MN_Handler(RequestHandler):
-    # Base class for Desktop/Mobile App handlers
+    #   Base class for Desktop/Mobile App handlers
     def __init__(self, application, request, **kwargs):
         RequestHandler.__init__(self, application, request, **kwargs)
         _headers = self.request.headers
@@ -75,6 +75,7 @@ class MN_Handler(RequestHandler):
         self.on_finish()
 
     def _request_summary(self):
+        #   class specific summary
         _h = self.request.headers
         _h.get(mn.MN_RESPONSE_CODE,'--')
         remote_ip = _h.get('X-Real-IP',self.request.remote_ip)
@@ -88,6 +89,8 @@ class MN_Handler(RequestHandler):
         return res + self._headers.get(mn.MN_ERROR_MESSAGE,'')
 
     def _handle_request_exception(self, e):
+        #   If something goes wrong at one side of interaction,
+        #   closes the other side as well (desktop / app)
         _partner = None
         _interaction = mn.get_Interaction(self.RequestID)
         if _interaction and _interaction._source:
@@ -126,6 +129,7 @@ class MN_Handler(RequestHandler):
             self.send_error(500, exc_info=sys.exc_info())
 
     def get_error_html(self, status_code, **kwargs):
+        #   adds error message header instead of error page
         reason = ''
         if 'exception' in kwargs:
             reason = str(kwargs['exception'])
@@ -133,6 +137,9 @@ class MN_Handler(RequestHandler):
         return ''
 
     def process_agent(self):
+        #   Starts interaction with cached app (if any)
+        #   waits for app otherwise
+        #   (Desktop .... <-> Mobile App)
         _client = mn.get_Client(self.ProductID)
         if _client:
             mn.Interaction(_client, self)(_client, self)
@@ -141,6 +148,7 @@ class MN_Handler(RequestHandler):
             self._timeout = IOLoop.instance().add_timeout(mn.MN_AGENT_TIMEOUT,self._response_no_client)
 
     def process_reply(self):
+        #   Replies: Mobile App <- Desktop
         _interaction = mn.get_Interaction(self.RequestID, validateID = self.ProductID)
         if _interaction and not _interaction.client._closed():
             _interaction._set_agent(self)
@@ -195,7 +203,7 @@ class MN_Handler(RequestHandler):
 
 
 class Agent_ready(MN_Handler):
-    # Desktop is ready to listen Mobile App requests
+    #   Desktop is ready to listen Mobile App requests
     @tornado.web.asynchronous
     def post(self):
         self.process_agent()
@@ -207,14 +215,14 @@ class Agent_ready(MN_Handler):
 
 
 class Agent_reply(MN_Handler):
-    # Desktop reply to Mobile App request
+    # Desktop replies to Mobile App request
     @tornado.web.asynchronous
     def post(self):
         self.process_reply()
 
 
 class Client(MN_Handler, instance.MN_Instance_Handler):
-    # Mobile App request
+    #   Mobile App connects to its Desktop (if any) to start transaction
     def __init__(self, application, request, **kwargs):
         MN_Handler.__init__(self, application, request, **kwargs)
         self.mn_server = ''
@@ -223,6 +231,9 @@ class Client(MN_Handler, instance.MN_Instance_Handler):
         self._not_found_callback = self._response_no_agent
 
     def process_client(self, repeat = True):
+        #   Starts transaction with cached Desktop (if any);
+        #   waits if Desktop is to be appeared soon;
+        #   refers to new Desktop location if found;
         _agent = None
         if not repeat:
             _agent = mn.get_Agent(self.ProductID)
@@ -248,7 +259,7 @@ class Client(MN_Handler, instance.MN_Instance_Handler):
 
 
 class Agent_ping (MN_Handler):
-    # Desktop 'ping' to find the closest server
+    # just 'ping' to choose the closest server
     @tornado.web.asynchronous
     def post(self):
         self.finish()

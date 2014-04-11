@@ -1,4 +1,4 @@
-""" Modified back-end classes instead of Tornado ones:
+""" Modified back-end classes to overrides some methods in Tornado classes:
 IOStream_np, HTTPConnection_np, HTTPServer_np, Application_np"""
 from __future__ import absolute_import, division, print_function, with_statement
 
@@ -69,9 +69,9 @@ def asynchronous(method):
 
 
 class IOStream_mn(IOStream):
-    """Small limited buffer is used to read data portions one by one;
-    reads while buffer is not full,
-    removes handler if trying to read to full buffer"""
+    #   Uses small limited buffer to read data portions one by one;
+    #   reads until buffer is full;
+    #   removes handler if _handle_read() occurs for stream with already full buffer
     def __init__(self, socket, *args, **kwargs):
         self.read_buffer_full = False
         super(IOStream_mn, self).__init__(socket, *args, **kwargs)
@@ -84,7 +84,7 @@ class IOStream_mn(IOStream):
         #                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         #   On error closes the socket and raises an exception.
 
-        # check .max_buffer_size
+        #   check .max_buffer_size
         self.read_buffer_full = self._read_buffer_size + self.read_chunk_size > self.max_buffer_size
         if self.read_buffer_full:
             return 0
@@ -109,8 +109,7 @@ class IOStream_mn(IOStream):
         return len(chunk)
 
     def _handle_events(self, fd, events):
-        """Temporary removes handler if _handle_read() for full buffer takes place
-        --------------------------------------------------------------"""
+        #   Temporary removes handler if _handle_read() occurs stream with full buffer
         if self.closed():
             gen_log.warning("Got events for closed stream %d", fd)
             return
@@ -139,14 +138,14 @@ class IOStream_mn(IOStream):
                 state |= self.io_loop.WRITE
             if state == self.io_loop.ERROR:
                 state |= self.io_loop.READ
-                # -------------- remove handler if buffer is already full
+                # -- removes handler if buffer is already full
                 if self.read_buffer_full:
                     state=None
             if state is None:
                 self._state = state
                 self.io_loop.remove_handler(self.fileno())
                 # gen_log.warning('%d handler has been removed',self.fileno())
-                # --------------- handler is added back in run_callback (tornado code)
+                # -- handler is to be added back in run_callback (tornado code)
             elif state != self._state:
                 assert self._state is not None,\
                 "shouldn't happen: _handle_events without self._state"
@@ -160,9 +159,8 @@ class IOStream_mn(IOStream):
 
 
 class SSLIOStream_mn(SSLIOStream):
-    """Currently SSL-connection is handled by reverse-proxy server (nginx).
-    No longer more needs to have special class here.
-    """
+    #   SSL-connection is handled by reverse-proxy server now (nginx).
+    #   No longer needs to have special class here.
     pass
 
 
@@ -171,8 +169,9 @@ class StreamClosedWarning(IOError):
 
 
 class HTTPServer_mn ( HTTPServer ):
+    #   Uses class with overridden methods instead of standard Tornado ones
     def handle_stream(self, stream, address):
-        """Uses class HTTPConnection_mn instead"""
+        #   Uses HTTPConnection_mn instead
         no_keep_alive = True
         if issubclass(type(stream), SSLIOStream):
             protocol = 'https'
@@ -182,7 +181,7 @@ class HTTPServer_mn ( HTTPServer ):
             no_keep_alive, self.xheaders, protocol)
 
     def _handle_connection(self, connection, address):
-        """Uses class IOStream_mn/SSLIOStream_mn instead"""
+        #   Uses IOStream_mn/SSLIOStream_mn with small buffer instead
         if self.ssl_options is not None:
             assert ssl, "Python 2.6+ and OpenSSL required for SSL"
             try:
@@ -211,11 +210,10 @@ class HTTPServer_mn ( HTTPServer ):
 
 
 class HTTPConnection_mn (HTTPConnection):
-    """ no "Content-Length too long" exception;
-    Request body is not read immediately.
-    """
+    #   No "Content-Length too long" exception;
+    #   Reads headers only, body is to be read later.
     def _on_headers(self, data):
-        """Request body is not read here"""
+        #   Request body is not read here
         try:
             data = native_str(data.decode('latin1'))
             eol = data.find("\r\n")
@@ -255,7 +253,7 @@ class HTTPConnection_mn (HTTPConnection):
             return
 
     def write(self, chunk, callback=None, error_on_closed=False):
-        """Writes a chunk of output to the stream. Warning if it's closed"""
+        #   Writes a chunk of output to the stream. Warning if it's closed
         assert self._request, "Request closed"
         if not self.stream.closed():
             self._write_callback = stack_context.wrap(callback)
@@ -266,7 +264,7 @@ class HTTPConnection_mn (HTTPConnection):
 
 
 class Application_mn (Application):
-    """Setting link to instance object"""
+    #   Sets link to instance object in addition
     def __init__(self, handlers=None, default_host="", transforms=None, wsgi=False, **settings):
         Application.__init__(self, handlers, default_host, transforms, wsgi, **settings)
         if settings.get("instance"):

@@ -11,10 +11,10 @@ from random import randint
 from mn_stats import stats_mon
 from tornado.log import access_log, app_log, gen_log
 
-define('timeout_agent', default=60, type=int)
-define('timeout_cache', default=5, type=int)
-define('timeout_client', default=5, type=int)
-define('timeout_no_reply', default=15, type=int)
+define('timeout_agent', default=60, type=int)       # Desktop is waiting for App
+define('timeout_cache', default=5, type=int)        # Desktop is considered to be appeared soon
+define('timeout_client', default=5, type=int)       # App is waiting before check whether Desktop is hear
+define('timeout_no_reply', default=15, type=int)    # App is waiting for Desktop reply
 
 # buffer size: use upper limit Content-Length as a key
 # default 4K for any Content-Length
@@ -51,7 +51,7 @@ options.add_parse_callback(_set_timeout_options)
 
 
 class Interaction:
-    """Desktop/app interaction"""
+    #   Desktop / App interaction
     def __init__(self, client, agent):
         self.client = client
         self.agent = agent
@@ -65,6 +65,8 @@ class Interaction:
             stats_mon._stats_on('Interact',self.ProductID)
 
     def __call__(self, source, destination, buffer_size = None, source_finish = False):
+        #   Transfers Data from _source to _destination  (chunk by chunk)
+        #   App -> Desktop, Desktop (reply) -> App
         self._source = source
         self._stream = source.request.connection.stream
         self._content_length = int(self._source.request.headers['Content-Length'])
