@@ -39,6 +39,3 @@ nosetests.xml
 env
 *.pyc
 log/
-range/
-instance/
-mynotes.conf
