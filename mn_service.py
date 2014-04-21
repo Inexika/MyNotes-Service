@@ -150,9 +150,13 @@ class MN_Handler(RequestHandler):
     def process_reply(self):
         #   Replies: Mobile App <- Desktop
         _interaction = mn.get_Interaction(self.RequestID, validateID = self.ProductID)
-        if _interaction and not _interaction.client._closed():
+
+        if _interaction and not _interaction.client._closed() and not _interaction.agent:
             _interaction._set_agent(self)
             _interaction(self,_interaction.client, source_finish=True)
+        elif _interaction and _interaction.agent:
+            self.request.connection.no_keep_alive = True
+            self.send_error(501,exc_info = (HTTPError, HTTPError(501, 'RequestID is being replied')))
         else:
             self.request.connection.no_keep_alive = True
             self.send_error(502,exc_info = (HTTPError, HTTPError(502, 'No client to reply')))
