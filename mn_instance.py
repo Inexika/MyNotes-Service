@@ -11,7 +11,7 @@ import os
 from tornado.web import RequestHandler
 from tornado.log import access_log, app_log, gen_log
 from tornado.options import define, options
-from mynotes import MN_PRODUCT_ID, MN_RESPONSE_TYPE, MN_NO_AGENT
+from mynotes import MN_PRODUCT_ID, MN_RESPONSE_TYPE, MN_NO_AGENT, MN_ERROR_MESSAGE
 
 MN_INSTANCE_SERVER = "X-IWP-Host"
 MN_INSTANCE_PORT = "X-IWP-Port"
@@ -343,7 +343,10 @@ class MN_Instance_Handler(RequestHandler):
         self.ProductID = _headers.get(MN_PRODUCT_ID,'')
         self._instance = application._instance
         self._search_count = 2
-        self._not_found_callback = self._response_no_agent
+        if self.ProductID:
+            self._not_found_callback = self._response_no_agent
+        else:
+            self._not_found_callback = self._response_not_implemented
 
     def _request_summary(self):
         #   class specific summary
@@ -353,12 +356,17 @@ class MN_Instance_Handler(RequestHandler):
               self.request.uri,
               getattr(self,'mn_server', '') or self._headers.get(MN_INSTANCE_SERVER,'') or '--',
               getattr(self,'mn_port', '') or self._headers.get(MN_INSTANCE_PORT,'') or '--',
-              getattr(self,'ProductID','--') or '--',
+              getattr(self,'ProductID','--') or self._headers.get(MN_PRODUCT_ID,'') or '--',
               _h.get('X-Real-IP', _h.get('X-Forwarded-For', self.request.remote_ip)))
         return res
 
     def _response_no_agent(self):
         self.add_header(MN_RESPONSE_TYPE, MN_NO_AGENT)
+        self.finish()
+
+    def _response_not_implemented(self, reason=None):
+        self.set_status(501, reason)
+        self.add_header(MN_ERROR_MESSAGE, reason)
         self.finish()
 
     def _find_desktop(self, response = None):
@@ -448,15 +456,18 @@ class agent_Connect (MN_Instance_Handler):
     #   passed to round-robin instance
     @tornado.web.asynchronous
     def post (self):
-        _inst = self._instance
-        _inst._updateLocation(self.ProductID)
-        self.set_header(MN_INSTANCE_PORT, _inst.port)
+        if self.ProductID:
+            _inst = self._instance
+            _inst._updateLocation(self.ProductID)
+            self.set_header(MN_INSTANCE_PORT, _inst.port)
 
-        for _server in _inst._servers:
-            _inst.connected(self.ProductID, server = _server)
-        for _port in _inst._instances:
-            _inst.connected(self.ProductID, port = _port)
-        self.finish()
+            for _server in _inst._servers:
+                _inst.connected(self.ProductID, server = _server)
+            for _port in _inst._instances:
+                _inst.connected(self.ProductID, port = _port)
+            self.finish()
+        else:
+            self._not_found_callback('No CustomerID')
 
 
 class inst_Connected(MN_Instance_Handler):
@@ -500,7 +511,10 @@ class app_Client(MN_Instance_Handler):
     #   port is not specified, passed to round robin instance
     @tornado.web.asynchronous
     def post (self):
-        self._find_desktop()
+        if self.ProductID:
+            self._find_desktop()
+        else:
+            self._not_found_callback('No CustomerID')
 
 
 class inst_Range(MN_Instance_Handler):

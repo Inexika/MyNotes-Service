@@ -33,9 +33,16 @@ Use commands like below to apply the patch.
 - Install [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional RRA-stats and monitoring
 - Install required python packages (you can do this just using `pip install -r requirements.txt`):
     - [Tornado](https://github.com/facebook/tornado)
+<<<<<<< HEAD
     - [PyRRD](https://pypi.python.org/pypi/PyRRD) - Python bindings for RRDTool
     - Fix PyRRD [bug](#fix-pyrrd-bug)
 - Clone repository
+=======
+    - [PyRRD](https://pypi.python.org/pypi/PyRRD) - Python bindings for RRDTool
+    - Fix PyRRD [bug](#fix-pyrrd-bug)
+- Clone repository `git clone git://github.com/Inexika/MyNotes-Service.git mynotes && cd mynotes`
+- Make sample environment
+>>>>>>> e0824d3223ee29a9bc69a3bdafc2ffc48aa7b532
 - Configure [server](#configure-server)
 - Configure [instances](#configure-instances)
 - Configure [nginx site](#configure-nginx)
@@ -56,8 +63,20 @@ Glossary
 
 Configuration
 -------------
+### Sample environment
 
-Below is a sample configuration:
+Make a sample configuration:
+
+    # rename sample files and directories
+    mv mynotes.sample.conf mynotes.conf
+    mv instance.sample instance
+    mv range.sample range
+    # create directories for range and log files
+    mkdir range/8082
+    mkdir log log/8081 log/8082
+
+The sample configuration is:
+
  - `Nginx` as a reverse proxy server
  - The only server `mynotes.your_domain.com` is in the cloud.
  - There are 2 instances `8081`, `8082` running by default
@@ -66,8 +85,7 @@ Below is a sample configuration:
         
 ### Configure server
 
-Rename file `mynotes.sample.conf` to `mynotes.conf`.
-The file contains common parameters for all instances of current server, specify necessary options.
+`mynotes.conf` file contains common parameters for all instances of current server, specify necessary options.
 
 Timeouts and buffer-size for data transferring and logging settings:
 
@@ -156,9 +174,7 @@ Charts and alert parameters. The section is used to config `monitor`:
 
 ### Configure server instances
 
-Sample config files for all instances are located in `./instance.sample` directory.
-Rename `instance.sample` to `instance`.
-
+Sample config files for all instances are located in `./instance` directory.
 Use listened port as a file name.
 Instance config file contains parameters, related  to particular instance. 
 Such as log file, stats file, etc.
@@ -179,7 +195,11 @@ Create another files for all of your instances or remove extra ones if needed.
 
 - `log_file_prefix`, `stats_file_prefix`, `rrd_file`:
 
+<<<<<<< HEAD
     `./log.sample` contains directories. You can either rename it to `log` or locate the files where you wish.
+=======
+    `./log` contains directories. You can either rename it to `log` or locate the files where you wish.
+>>>>>>> e0824d3223ee29a9bc69a3bdafc2ffc48aa7b532
 
 - Check the correct locations are specified in the instances' config files .
 
@@ -254,6 +274,7 @@ locations to pass to particular instances:
     .....
 
 ### Fix PyRRD [bug](https://code.google.com/p/pyrrd/issues/detail?id=26):
+or use pyrrd.patch from sources
 
     pyrrd.backend.external.prepareObject()
 

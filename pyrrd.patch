@@ -1,0 +1,12 @@
+--- ./pyrrd/backend/external.py.original<------>2014-04-23 07:19:17.948585049 +0000
++++ ./pyrrd/backend/external.py>2014-04-23 07:17:37.776031339 +0000
+@@ -280,7 +280,7 @@
+     if function == 'fetch':
+         validParams = ['resolution', 'start', 'end']
+         params = common.buildParameters(obj, validParams)
+-        return (obj.filename, obj.cf, params)
++        return (obj.filename, [obj.cf] + params)
+.
+     if function == 'info':
+         return (obj.filename, obj)
+
