@@ -31,18 +31,12 @@ Use commands like below to apply the patch.
 
 - Install Python 2.7 
 - Install [RRDTool](http://oss.oetiker.ch/rrdtool/) - optional RRA-stats and monitoring
+- Clone repository `git clone git://github.com/Inexika/MyNotes-Service.git mynotes && cd mynotes`
 - Install required python packages (you can do this just using `pip install -r requirements.txt`):
     - [Tornado](https://github.com/facebook/tornado)
-<<<<<<< HEAD
     - [PyRRD](https://pypi.python.org/pypi/PyRRD) - Python bindings for RRDTool
-    - Fix PyRRD [bug](#fix-pyrrd-bug)
-- Clone repository
-=======
-    - [PyRRD](https://pypi.python.org/pypi/PyRRD) - Python bindings for RRDTool
-    - Fix PyRRD [bug](#fix-pyrrd-bug)
-- Clone repository `git clone git://github.com/Inexika/MyNotes-Service.git mynotes && cd mynotes`
+- Fix PyRRD [bug](#fix-pyrrd-bug)
 - Make sample environment
->>>>>>> e0824d3223ee29a9bc69a3bdafc2ffc48aa7b532
 - Configure [server](#configure-server)
 - Configure [instances](#configure-instances)
 - Configure [nginx site](#configure-nginx)
@@ -195,11 +189,7 @@ Create another files for all of your instances or remove extra ones if needed.
 
 - `log_file_prefix`, `stats_file_prefix`, `rrd_file`:
 
-<<<<<<< HEAD
     `./log.sample` contains directories. You can either rename it to `log` or locate the files where you wish.
-=======
-    `./log` contains directories. You can either rename it to `log` or locate the files where you wish.
->>>>>>> e0824d3223ee29a9bc69a3bdafc2ffc48aa7b532
 
 - Check the correct locations are specified in the instances' config files .
 
