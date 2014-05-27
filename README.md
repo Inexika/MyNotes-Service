@@ -1,7 +1,7 @@
 MyNotes-Service
 ===============
 
-*My Note Cloud Service* is a part of [My Notes](http://www.mynotesapp.com) solution to access your [IBM Lotus Notes applications from iPhone or Android](http://www.mynotesapp.com) developed by [Inexika Inc.](http://www.inexika.com) 
+*My Note Cloud Service* is a part of [My Notes](http://www.mynotesapp.com) solution to access your [IBM Lotus Notes applications on iPhone or Android](http://www.mynotesapp.com) developed by [Inexika Inc.](http://www.inexika.com) 
 The service is used by My Notes Desktop and My Notes mobile apps connected over the internet.
 
 Features
