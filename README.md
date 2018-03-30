@@ -276,7 +276,7 @@ or use pyrrd.patch from sources
 
 Start
 -----
-###Start Instances
+### Start Instances
 Each of the instances can be run independently from the others.
 To run instances and listen particular ports:
 
@@ -284,7 +284,7 @@ To run instances and listen particular ports:
     python mn_service.py --port=8082
 
 
-###Start Monitor
+### Start Monitor
 We recommend to configure periodic start `monitor` script.
 Every time `monitor` runs it updates files with stats for charts.
 It also checks whether overloading or downtime is happening, and sends email alert if needed.
