@@ -1,0 +1,2 @@
+# MyNotes graphics update script
+*/5 * * * *	 root /home/inexika/bin/mynotes-stats.sh

@@ -1,0 +1,13 @@
+[Unit]
+Description=MyNotes 8082 service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/inexika/mynotes/mynotes
+ExecStart=/usr/bin/python /home/inexika/mynotes/mynotes/mn_service.py --port=8082
+Restart=always
+RestartSec=10  # Restart service after 10 seconds if dotnet service crashes
+SyslogIdentifier=mynotes
+[Install]
+WantedBy=multi-user.target
+

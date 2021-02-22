@@ -130,9 +130,10 @@ def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
             defs.append(DEF(vname=('bytes_sec_%s' % _inst),rrdfile=_rrd.filename,dsName=gtype,start=_start,step=_step))
             cdefs.append(CDEF(vname=('bits_%s' % _inst),rpn=('bytes_sec_%s,8,*' % _inst)))
             items.append(LINE(defObj=cdefs[-1:].pop(), color=_colors.pop(), legend=_inst, stack=False))
-            vdefs.append(VDEF(vname=('traffic_%s' % _inst),
-                rpn=(','.join([('bytes_sec_%s' % _inst), 'TOTAL']))))
-            gprints.append(GPRINT(vdefObj=vdefs[-1:].pop(), format=_inst +' = %.3lf %sB'))
+            if size<>'S':
+                vdefs.append(VDEF(vname=('traffic_%s' % _inst),
+                    rpn=(','.join([('bytes_sec_%s' % _inst), 'TOTAL']))))
+                gprints.append(GPRINT(vdefObj=vdefs[-1:].pop(), format=_inst +' = %.3lf %sB'))
         if len(cdefs)>1:
             cdefs.append(
                 CDEF(vname='bits_total',
@@ -152,16 +153,19 @@ def graph_data(gtype = None, period = MON_START_DAY, size = 'M'):
             items.append(AREA(defObj=cdefs[-1:].pop(), color=_colors.pop(), legend=_inst, stack=True))
 
     elif gtype == MON_GRAPH_TRANS:
-        _title = 'Completed Transactions (app/desktop interactions)'
+        _title = 'Completed Transactions'
+        if size<>'S':
+            _title += ' (app/desktop interactions)'
         _label = 'pcs/min'
         _colors = COLOR_SET_3[:]
         for (_inst,_rrd) in RRDs.items():
             defs.append(DEF(vname=('completed_%s' % _inst),rrdfile=_rrd.filename,dsName=gtype,start=_start,step=_step))
             cdefs.append(CDEF(vname=('completed_min_%s' % _inst),rpn=('completed_%s,60,*' % _inst)))
             items.append(LINE(defObj=cdefs[-1:].pop(), color=_colors.pop(), legend=_inst, stack=False))
-            vdefs.append(VDEF(vname=('total_completed_%s' % _inst),
-                rpn=(','.join([('completed_%s' % _inst), 'TOTAL']))))
-            gprints.append(GPRINT(vdefObj=vdefs[-1:].pop(), format=_inst +' = %.0lf%s'))
+            if size<>'S':
+                vdefs.append(VDEF(vname=('total_completed_%s' % _inst),
+                    rpn=(','.join([('completed_%s' % _inst), 'TOTAL']))))
+                gprints.append(GPRINT(vdefObj=vdefs[-1:].pop(), format=_inst +' = %.0lf%s'))
         if len(cdefs)>1:
             cdefs.append(
                 CDEF(vname='pcs_total',
